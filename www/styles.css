@@ -1,0 +1,166 @@
+/* 1. Global row and column spacing */
+#dials .row > * {
+  padding-right: 5px !important;
+  padding-left: 5px !important;
+}
+
+#dials .compact-row { 
+  display: flex !important; 
+  align-items: center !important;
+  margin-bottom: 0px !important;
+}
+
+#dials .shiny-input-container {
+  margin-bottom: 0px !important;
+  text-align: right;
+}
+
+/* 2. Slider handle */
+#dials .irs-handle {
+  width: 26px !important;
+  height: 26px !important;
+  top: 6px !important; /* Adjusted for the new 12px track height */
+  background-color: #ffa500 !important;
+  border: 2px solid #fff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+
+#dials .irs-handle i,
+#dials .irs-handle > i:first-child {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 3. Outer Track (frame) */
+#dials .irs-line {
+  background: #eeeeee !important; 
+  /* Outline sits outside the box, so it won't fight the background */
+  outline: 1px solid #cc8400 !important; 
+  height: 10px !important;      
+  top: 14px !important;
+  border-radius: 4px !important;
+  box-sizing: border-box !important;
+  border: none !important;
+  z-index: 2 !important;
+}
+
+/* 4. Active bar */
+#dials .irs-bar {
+  background-color: #ffa500 !important;
+  height: 10px !important;      
+  top: 14px !important;         
+  border: none !important;      
+  /* This prevents ANY bleed beyond the 10px height */
+  clip-path: inset(0px 0px 0px 0px);
+  border-radius: 4px 0 0 4px !important;
+  box-sizing: border-box !important;
+}
+
+/* 5. Numbers and ticks */
+#dials .irs-grid, 
+#dials .irs-min, 
+#dials .irs-max, 
+#dials .irs-single:after { 
+  display: none !important; 
+}
+
+#dials .irs-single {
+  display: block !important;
+  top: 9px !important;         /* Centered in the handle */
+  background: transparent !important;
+  color: #fff !important;
+  font-weight: bold;
+  font-size: 11px;
+  z-index: 5 !important;
+  pointer-events: none;
+}
+
+/* 6. Card tab styling */
+.bslib-card {
+  border-radius: 2px !important;
+}
+
+.bslib-sidebar-layout > .sidebar-content > .sidebar-title {
+  position: absolute;
+  top: 8px;
+  right: 48px;
+}
+
+/* 7. Accordion (the 'well' look) */
+#dials .accordion {
+  --bs-accordion-border-color: transparent;
+  --bs-accordion-bg: transparent;
+  box-shadow: none !important;
+}
+
+#dials .accordion-button {
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 4px !important;
+  margin-bottom: 2px;
+  color: #333 !important;
+  font-weight: bold !important;
+}
+
+#dials .accordion-button:not(.collapsed) {
+  background-color: #f8f9fa !important; /* Lock colour even when open */
+  color: #333 !important;
+}
+
+#dials .accordion-body {
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  border-top: none !important;
+  border-radius: 0 0 4px 4px !important;
+  padding: 15px 25px 10px 25px !important;
+}
+
+#dials .accordion-item {
+  margin-bottom: 8px !important;
+  border: none !important;
+}
+
+#dials input[type="number"] {
+  padding-left: 16px !important;
+  padding-right: 4px !important;
+}
+
+#dials input[readonly] {
+  background-color: #e9ecef !important;
+  color: #6c757d !important;
+  cursor: text;
+  border-color: #dee2e6 !important;
+}
+
+/* 8. Sidebar toggle: three bars instead of the chevron */
+.bslib-sidebar-layout > .collapse-toggle {
+  position: relative;
+}
+
+.bslib-sidebar-layout > .collapse-toggle > .collapse-icon {
+  opacity: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+}
+
+.bslib-sidebar-layout > .collapse-toggle::after {
+  content: "";
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  background-color: var(--bs-primary);
+  -webkit-mask-image: url("menu_icon.svg");
+  mask-image: url("menu_icon.svg");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+
+/* 9. Перенос строки в уведомлении */
+.shiny-notification .progress-message, 
+.shiny-notification .progress-detail { 
+  display: block; 
+  clear: both;
+  margin-top: 4px;
+}

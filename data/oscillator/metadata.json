@@ -1,0 +1,21 @@
+{
+  "Id": "e6370560-1aa1-4e8a-a62f-5cfcdb296e73",
+  "name": "Гармонический осциллятор (простой пример)",
+  "vars": {
+    "x": {
+      "name": "x",
+      "formula": "dd(xp) + shift(q*x, -1) - ddx0",
+      "nonneg": false,
+	  "dial": false,
+      "unit": "безразм."
+    },
+    "xp": {
+      "name": "x'",
+      "formula": "xp - dd(x) - dx0",
+      "nonneg": false,
+	  "dial": false,
+      "unit": "безразм."
+    }
+  },
+  "pars": []
+}

@@ -1,0 +1,35 @@
+{
+  "Id": "e6370560-1aa1-4e8a-a62f-5cfcdb296e73",
+  "name": "Простая задача с обратной связью",
+  "vars": {
+	"t": {
+      "name": "t",
+      "formula": "data()",
+      "nonneg": false,
+	  "dial": false,
+      "unit": "безразм."
+    },
+	"x": {
+      "name": "x",
+      "formula": "x - sin(q2*t) - 5",
+      "nonneg": false,
+	  "dial": false,
+      "unit": "безразм."
+    },
+    "y": {
+      "name": "y",
+      "formula": "y - q1 * h",
+      "nonneg": false,
+	  "dial": false,
+      "unit": "безразм."
+    },
+    "h": {
+      "name": "h",
+      "formula": "dd(h) - x + y - h0",
+      "nonneg": false,
+	  "dial": false,
+      "unit": "безразм."
+    }
+  },
+  "pars": []
+}
