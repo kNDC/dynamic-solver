@@ -1,35 +1,44 @@
 {
-  "Id": "e6370560-1aa1-4e8a-a62f-5cfcdb296e73",
+  "Id": "9b2080cd-2408-49a6-ac89-f4e63a6a836e",
   "name": "Простая задача с обратной связью",
-  "vars": {
-	"t": {
-      "name": "t",
-      "formula": "data()",
-      "nonneg": false,
-	  "dial": false,
-      "unit": "безразм."
+  "eqs": {
+    "x_def": {
+      "formula": "x - sin(qx * t) - 5"
     },
-	"x": {
-      "name": "x",
-      "formula": "x - sin(q2*t) - 5",
-      "nonneg": false,
-	  "dial": false,
+    "y_def": {
+      "formula": "y - qy * h"
+    },
+    "h_init": {
+      "formula": "h[1] - h0[1]"
+    },
+    "h_def": {
+      "formula": "dd(h) - x[-T] + y[-T]"
+    }
+  },
+  "neqs": [],
+  "endogenous": {
+    "x": {
+      "name": "x0",
       "unit": "безразм."
     },
     "y": {
-      "name": "y",
-      "formula": "y - q1 * h",
-      "nonneg": false,
-	  "dial": false,
-      "unit": "безразм."
-    },
-    "h": {
-      "name": "h",
-      "formula": "dd(h) - x + y - h0",
-      "nonneg": false,
-	  "dial": false,
+      "name": "xp0",
       "unit": "безразм."
     }
   },
-  "pars": []
+  "exogenous": {
+    "qx": {
+      "name": "qx",
+      "unit": "безразм."
+    },
+    "qy": {
+      "name": "qy",
+      "unit": "безразм."
+    },
+    "h0": {
+      "name": "h0",
+      "unit": "безразм."
+    }
+  },
+  "parameters": []
 }

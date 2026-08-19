@@ -7,18 +7,29 @@ SymbolicEngine <- R6Class(
   public = list(
     zMx = as.symbol("zMx"), 
     uMx = as.symbol("uMx"), 
-    sub_uMx = as.symbol("sub_uMx"),
-    sup_uMx = as.symbol("sup_uMx"),
     
-    add_sources = function(expr, sources) {
-      if (is.expression(expr) || is.list(expr)) {
+    ddMx = as.symbol("ddMx"), 
+    adjMx = as.symbol("adjMx"), 
+    
+    initialize = function() {
+      private$adjMx0 <- private$process_indices(
+        call("[", self$uMx, call("-", quote(`T`)), quote(expr = ))
+      );
+      
+      private$adjMx1 <- private$process_indices(
+        call("[", self$uMx, call("-", 1), quote(expr = ))
+      );
+    },
+    
+    add_sources = function(expr, ...) {
+      if (is.recursive(expr)) {
         return(as.expression(lapply(
           expr, 
-          function(node) private$append_source(node, sources)
+          function(node) private$append_source(node, ...)
         )));
       }
       
-      return(private$append_source(expr, sources));
+      return(private$append_source(expr, ...));
     },
     
     parse = function(expr) {
@@ -28,10 +39,21 @@ SymbolicEngine <- R6Class(
         if (length(expr) == 1) return(expr);
         
         arg <- self$parse(expr[[2]]);
+        
+        # Добавленные операторы
         if (expr[[1]] == quote(dd)) {
-          return(bquote((.(self$uMx) - .(self$sub_uMx)) %*% .(arg)));
-        } else if (expr[[1]] == quote(shift)) {
-          return(bquote(.(self$sub_uMx) %*% .(arg)));
+          return(call("%*%", self$ddMx, arg));
+        } else if (expr[[1]] == quote(adj0)) {
+          return(call("%*%", private$adjMx0, arg));
+        } else if (expr[[1]] == quote(adj1)) {
+          return(call("%*%", private$adjMx1, arg));
+        } else if (expr[[1]] == quote(adj)) {
+          return(call("%*%", self$adjMx, arg));
+        }
+        
+        # Нормализация индексов
+        if (expr[[1]] == quote(`[`) || expr[[1]] == quote(`[[`)) {
+          return(private$process_indices(expr));
         }
         
         return(as.call(lapply(expr, self$parse)));
@@ -74,18 +96,26 @@ SymbolicEngine <- R6Class(
               
               return(if (expr == var) self$uMx else self$zMx);
             }
+            
             return(self$zMx);
           }
+        }
+        
+        # Индексирующие записи
+        # A[i.rows, i.cols] -> [, A, i.rows, i.cols
+        if (op.name == "[" || op.name == "[[") {
+          index.op <- call(op.name, self$uMx, expr[[3]], quote(expr = ));
+          
+          return(call("%*%", private$process_indices(index.op), 
+                      .D(expr[[2]], var, flat_matching)
+          ));
         }
         
         # Матричные операции
         # A %*% x -> %*%, A, x
         if (op.name == "%*%") {
-          symbs <- list(
-            A = expr[[2]], 
-            dx = .D(expr[[3]], var, flat_matching)
-          );
-          return(substitute(A %*% dx, symbs));
+          return(call("%*%", expr[[2]], 
+                      .D(expr[[3]], var, flat_matching)));
         }
         
         # Алгебраические операции
@@ -94,33 +124,40 @@ SymbolicEngine <- R6Class(
           if (length(expr) == 2) {
             return(.D(expr[[2]], var, flat_matching));
           } else if (length(expr) == 3) {
-            return(bquote(
-              .(.D(expr[[2]], var, flat_matching)) + 
-                .(.D(expr[[3]], var, flat_matching))
-            ));
+            return(call("+", 
+              .D(expr[[2]], var, flat_matching), 
+              .D(expr[[3]], var, flat_matching))
+            );
           }
         } else if (op.name == "-") {
           if (length(expr) == 2) {
-            return(bquote(-.(.D(expr[[2]], var, flat_matching))));
+            return(call("-", .D(expr[[2]], var, flat_matching)));
           } else if (length(expr) == 3) {
-            return(bquote(
-              .(.D(expr[[2]], var, flat_matching)) - 
-                .(.D(expr[[3]], var, flat_matching))
-            ));
+            return(call("-", 
+              .D(expr[[2]], var, flat_matching), 
+              .D(expr[[3]], var, flat_matching))
+            );
           }
         } else if (op.name == "*") {
           u = expr[[2]]; v = expr[[3]];
           du = .D(expr[[2]], var, flat_matching);
           dv = .D(expr[[3]], var, flat_matching);
           
-          return(bquote(
-            .(private$diag(v)) %*% (.(du)) + 
-              .(private$diag(u)) %*% (.(dv))
+          return(call(
+            "+", 
+            call("%*%", private$diag(v), du), 
+            call("%*%", private$diag(u), dv)
           ));
         } else if (op.name == "/") {
           u = expr[[2]]; v = expr[[3]];
           du = .D(expr[[2]], var, flat_matching);
           dv = .D(expr[[3]], var, flat_matching);
+          
+          return(call(
+            "-", 
+            call("%*%", private$diag(call("/", 1, v)), du), 
+            call("%*%", private$diag(call("/", u, call("^", v, 2))), dv)
+          ));
         }
         
         if (op.name == "^") {
@@ -133,20 +170,25 @@ SymbolicEngine <- R6Class(
                .(private$diag(bquote(.(u)^.(v) * log(.(u))))) %*% (.(dv)))
           ));
         } else if (op.name == "sqrt") {
-          return(.D(bquote(.(expr[[2]])^0.5), var, flat_matching));
+          return(.D(call("^", expr[[2]], 0.5), var, flat_matching));
+        } else if (op.name == "exp") {
+          return(call("%*%", private$diag(expr), 
+                      .D(expr[[2]], var, flat_matching)));
         }
         
         # Введённые дополнительные операторы
         if (op.name == "dd") {
-          return(bquote(
-            (.(self$uMx) - .(self$sub_uMx)) %*% 
-              (.(.D(expr[[2]], var, flat_matching)))
-          ));
-        } else if (op.name == "shift") {
-          return(bquote(
-            .(self$sub_uMx) %*% 
-              (.(.D(expr[[2]], var, flat_matching)))
-          ));
+          return(call("%*%", self$ddMx, 
+                      .D(expr[[2]], var, flat_matching)));
+        } else if (op.name == "adj") {
+          return(call("%*%", self$adjMx, 
+                      .D(expr[[2]], var, flat_matching)));
+        } else if (op.name == "adj0") {
+          return(call("%*%", private$adjMx0, 
+                      .D(expr[[2]], var, flat_matching)));
+        } else if (op.name == "adj1") {
+          return(call("%*%", private$adjMx1, 
+                      .D(expr[[2]], var, flat_matching)));
         }
         
         # Производные элементарных функций
@@ -154,46 +196,49 @@ SymbolicEngine <- R6Class(
           # Логарифмы
           if (op.name == "log") { # Логарифм с произвольным основанием
             x <- expr[[2]]; a <- expr[[3]];
-            return(bquote(
-              .(private$diag(1/x/log(a)))
-            ));
+            return(private$diag(call("/", call("/", 1, x), 
+                                     call("log", a))));
           }
           
           if (op.name == "ln") { # Естественный логарифм
-            return(.D(bquote(log(.(expr[[2]]), exp(1))), var, flat_matching));
+            x <- expr[[2]];
+            return(private$diag(call("/", 1, x)));
           }
           
           if (op.name == "lg") { # Десятичный логарифм
-            return(.D(bquote(log(.(expr[[2]]), 10)), var, flat_matching));
+            x <- expr[[2]];
+            return(private$diag(call("/", call("/", 1, x), 
+                                     call("log", 10))));
           }
           
           # Тригонометрические
           if (op.name == "sin") {
             x <- expr[[2]];
-            return(bquote(
-              .(private$diag(bquote(cos(.(x)))))
-            ));
+            return(private$diag(call("cos", x)));
           }
           
           if (op.name == "cos") {
             x <- expr[[2]];
-            return(bquote(
-              -.(private$diag(bquote(sin(.(x)))))
-            ));
+            return(call("-", private$diag(call("sin", x))));
           }
           
           if (op.name == "tg") {
             x <- expr[[2]];
-            return(bquote(
-              .(private$diag(1 + bquote(tan(.(x))^2)))
-            ));
+            return(private$diag(call("+", 1, call("^", call("tan", x), 2))));
           }
           
           if (op.name == "ctg") {
             x <- expr[[2]];
-            return(bquote(
-              -.(private$diag(1 + 1/tan(x)^2))
-            ));
+            return(call(
+              "-", 
+              private$diag(call(
+                "+", 1, call("/", 1, call("^", call("tan", x), 2)))
+            )));
+          }
+          
+          if (op.name == "arctg" || op.name == "atan") {
+            x <- expr[[2]];
+            return(private$diag(call("/", 1, call("+", 1, call("^", x, 2)))));
           }
         }
         
@@ -202,10 +247,10 @@ SymbolicEngine <- R6Class(
         summands <- lapply(
           seq_along(expr)[-1], 
           function(i) {
-            df.dx <- .D(expr, expr[[i]], flat_matching);
-            dx.dvar <- .D(expr[[i]], var, flat_matching);
-            return(bquote(
-              (.(df.dx)) %*% (.(dx.dvar))
+            return(call(
+              "%*%", 
+              .D(expr, expr[[i]], flat_matching), 
+              .D(expr[[i]], var, flat_matching)
             ));
           }
         );
@@ -216,47 +261,143 @@ SymbolicEngine <- R6Class(
       # Если переменная - строка, перейти к символам
       if (is.character(var)) var <- parse(text = var)[[1]];
       
-      if (is.recursive(expr) && !is.call(expr)) {
-        return(private$simplify(as.expression(lapply(
-          expr, function(expr) .D(expr, var, flat_matching))
-        )));
-      }
-      
       if (is.call(expr)) {
-        return(private$simplify(.D(expr, var, flat_matching)));
+        out <- private$simplify(.D(expr, var, flat_matching));
+      } else if (is.recursive(expr)) {
+        out <- private$simplify(as.expression(lapply(
+          expr, function(expr) .D(expr, var, flat_matching))
+        ));
+      } else return(expr);
+      
+      if (is.symbol(out) && out == self$zMx) {
+        dimension_op <- self$dimension_op(expr);
+        if (dimension_op != self$uMx) {
+          out <- call("%*%", self$dimension_op(expr), out);
+        }
+      } else if (is.expression(out) && 
+                 is.symbol(out[[1]]) && out[[1]] == self$zMx) {
+        dimension_op <- self$dimension_op(expr);
+        if (dimension_op != self$uMx) {
+          out[[1]] <- call("%*%", self$dimension_op(expr), out[[1]]);
+        }
       }
       
-      return(expr);
+      return(out);
+    },
+    
+    dimension_op = function(expr) {
+      mult_chains <- list();
+      
+      .dimension_op <- function(node, chain) {
+        if (is.symbol(node)) {
+          mult_chains[[length(mult_chains) + 1]] <<- chain;
+          return();
+        }
+        
+        if (is.expression(node)) {
+          for (i in seq_along(node)) {
+            .dimension_op(node[[i]], chain);
+          }
+        }
+        
+        if (!is.call(node)) return();
+        
+        if (node[[1]] == quote(dd)) {
+          return(.dimension_op(node[[2]], 
+            call("%*%", chain, self$ddMx)
+          ));
+        } else if (node[[1]] == quote(adj)) {
+          return(.dimension_op(node[[2]], 
+            call("%*%", chain, self$adjMx)
+          ));
+        } else if (node[[1]] == quote(adj0)) {
+          index.op <- call("[", self$uMx, 
+                           call("-", quote(`T`)), quote(expr = ));
+          return(.dimension_op(node[[2]], 
+            call("%*%", chain, index)
+          ));
+        } else if (node[[1]] == quote(adj1)) {
+          return(.dimension_op(node[[2]], 
+                                    call("%*%", chain, self$adjMx)
+          ));
+        }
+        
+        if (node[[1]] == quote(`[`)) {
+          index.op <- call("[", self$uMx, node[[3]], quote(expr = ));
+          mult_chains[[length(mult_chains) + 1]] <<- 
+            call("%*%", chain, private$process_indices(index.op));
+          return();
+        }
+        
+        if (node[[1]] == quote(`%*%`)) {
+          return(.dimension_op(
+            node[[3]], 
+            call("%*%", chain, node[[2]])
+          ));
+        }
+        
+        if (length(node) >= 2) {
+          for (i in 2:length(node)) {
+            .dimension_op(node[[i]], chain);
+          }
+        }
+      }
+      
+      .dimension_op(expr, self$uMx);
+      
+      mult_chains <- lapply(
+        mult_chains, private$simplify
+        );
+      
+      # Так как все переменные одной длины, то 
+      # выбирается просто самая короткая цепочка
+      i_min <- 1;
+      for (i in seq_along(mult_chains)) {
+        if (is.symbol(mult_chains[[i]]) && 
+            mult_chains[[i]] == self$uMx) {
+          return(self$uMx);
+        } else if (length(mult_chains[[i]]) <= 
+                   length(mult_chains[[i_min]])) {
+          i_min <- i;
+        }
+      }
+      
+      if (!length(mult_chains)) return(NULL);
+      return(mult_chains[[i_min]]);
     }
   ), 
   
   private = list(
     diag_op = ".sparseDiagonal",
+    adjMx0 = NULL,
+    adjMx1 = NULL,
     
     # Диагонализация множителей для матрицы Якоби
     diag = function(expr) {
-      
       return(bquote(.(as.symbol(private$diag_op))(x = .(expr))));
     },
     
     # Извлекает название источника для переменной
-    find_source = function(node, sources) {
+    find_source = function(node, ...) {
       name <- as.character(node);
+      env.names <- as.character(substitute(...()));
       
-      for (i in seq_along(sources)) {
-        if (name %in% sources[[i]]) return(names(sources)[[i]]);
+      i <- 1;
+      for (env in list(...)) {
+        if (exists(name, envir = env, inherits = F)) return(env.names[i]);
+        i <- i + 1;
       }
       
       return(NULL);
     },
     
-    append_source = function(node, sources) {
+    append_source = function(node, ...) {
       # Дальнейшие уровни вложенности узлов выражения
       if (is.recursive(node)) {
         if (is.call(node)) {
           return(as.call(lapply(
             node, 
-            function(sub_node) private$append_source(sub_node, sources)
+            function(sub_node) private$append_source(sub_node, ...)
           )));
         }
         
@@ -266,7 +407,7 @@ SymbolicEngine <- R6Class(
       # Случай если узел - не переменная
       if (!is.symbol(node)) return(node);
       
-      src.name <- private$find_source(node, sources);
+      src.name <- private$find_source(node, ...);
       if (is.null(src.name)) return(node);
       src.symb <- parse(text = src.name)[[1]];
       
@@ -360,7 +501,7 @@ SymbolicEngine <- R6Class(
           }
         }
         
-        # zMx %*% A -> zMx; uMx %*% A -> A
+        # zMx %*% A -> zMx; uMx %*% A -> A; -uMx %*% A -> -A
         # diag(x) %*% diag(y) -> diag(x * y)
         if (op.name == "%*%") {
           if ((is.symbol(expr[[2]]) && expr[[2]] == self$zMx) || 
@@ -373,6 +514,18 @@ SymbolicEngine <- R6Class(
           } else if (is.symbol(expr[[3]]) && expr[[3]] == self$uMx) {
             once_more <<- T;
             return(expr[[2]]);
+          } else if (is.call(expr[[2]]) && length(expr[[2]]) == 2 && 
+                     expr[[2]][[1]] == quote(`-`) && 
+                     is.symbol(expr[[2]][[2]]) && 
+                     expr[[2]][[2]] == self$uMx) {
+            once_more <<- T;
+            return(call("-", expr[[3]]));
+          } else if (is.call(expr[[3]]) && length(expr[[3]]) == 2 && 
+                     expr[[3]][[1]] == quote(`-`) && 
+                     is.symbol(expr[[3]][[2]]) && 
+                     expr[[3]][[2]] == self$uMx) {
+            once_more <<- T;
+            return(call("-", expr[[2]]));
           }
           
           if ((is.call(expr[[2]]) && (expr[[2]][[1]] == private$diag_op)) && 
@@ -430,6 +583,52 @@ SymbolicEngine <- R6Class(
       }
       
       return(expr);
+    },
+    
+    # x[1, , drop = FALSE] -> `[`, x, 1, quote(expr = ), FALSE
+    process_indices = function(expr) {
+      var <- expr[[2]];
+      if (length(expr) == 2) return(var);
+      
+      if(length(expr) > 3) {
+        T.subst <- call("nrow", var);
+      } else {
+        T.subst <- call("length", var);
+      }
+      
+      # Передаются только вызовы => нет выражений
+      .replace_Ts <- function(node) {
+        if (is.call(node)) {
+          return(as.call(lapply(node, .replace_Ts)));
+        }
+        
+        if (is.symbol(node) && node == quote(`T`)) return(T.subst);
+        return(node);
+      };
+      
+      .group_inds <- function(node) {
+        .extract_set <- function(node) {
+          if (is.call(node) && node[[1]] == quote(`{`)) {
+            return(as.call(c(quote(c), as.list(node[-1]))));
+          }
+          
+          return(node);
+        }
+        
+        return(as.call(lapply(node, function(node) {
+          if (is.call(node) && node[[1]] == quote(`-`) && 
+              length(node) == 2) {
+            return(call("-", .extract_set(node[[2]])));
+          } else {
+            return(.extract_set(node));
+          }
+        })));
+      }
+      
+      out <- .replace_Ts(expr);
+      out <- .group_inds(out);
+      if (is.null(out$drop)) out$drop <- FALSE;
+      return(out);
     }
   )
 );

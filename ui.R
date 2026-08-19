@@ -1,17 +1,10 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
+## Пользовательская составляющая
+# https://shiny.posit.co/
 
 library(shiny)
 library(bslib)
 # library(plotly)
 
-# Взаимодействие с пользователем
 page_fluid(
   title = "Макро-планировщик", 
   theme = bs_theme(version = 5, primary = "#ffa500"), 
@@ -38,17 +31,17 @@ page_fluid(
     ),
     
     navset_card_tab(
-      nav_panel(title = "Графики", 
-                plotOutput("plots.main", height = "auto"),
-                plotOutput("plots.dual", height = "auto")),
+      nav_panel(title = "Графики", div(
+                  plotOutput("plots_main", height = "auto"),
+                  plotOutput("plots_dual", height = "auto"))),
       nav_panel(title = "Таблицы", 
-                tableOutput("tables.main"), 
-                tableOutput("tables.dual")),
-      full_screen = T
+                tableOutput("tables_main"), 
+                tableOutput("tables_dual")),
+      full_screen = TRUE
     ), 
     
-    border = F,
-    border_radius = F, 
+    border = FALSE,
+    border_radius = FALSE, 
     class = "p-0", 
     position = "right"
   )

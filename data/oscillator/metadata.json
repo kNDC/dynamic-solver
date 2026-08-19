@@ -1,21 +1,44 @@
 {
-  "Id": "e6370560-1aa1-4e8a-a62f-5cfcdb296e73",
+  "Id": "02a5e76e-e347-4f65-b537-91ad8b2fab7c",
   "name": "Гармонический осциллятор (простой пример)",
-  "vars": {
+  "eqs": {
+    "x_init": {
+      "formula": "x[1] - x0[1]"
+    },
+    "xp_init": {
+      "formula": "xp[1] - xp0[1]"
+    },
+    "xpp": {
+      "formula": "dd(xp) + adj(q*x)"
+    },
+    "x_xp_aux": {
+      "formula": "dd(x) - adj(xp)"
+    }
+  },
+  "neqs": [],
+  "endogenous": {
     "x": {
       "name": "x",
-      "formula": "dd(xp) + shift(q*x, -1) - ddx0",
-      "nonneg": false,
-	  "dial": false,
       "unit": "безразм."
     },
     "xp": {
       "name": "x'",
-      "formula": "xp - dd(x) - dx0",
-      "nonneg": false,
-	  "dial": false,
       "unit": "безразм."
     }
   },
-  "pars": []
+  "exogenous": {
+    "x0": {
+      "name": "x(0)",
+      "unit": "безразм."
+    },
+    "xp0": {
+      "name": "x'(0)",
+      "unit": "безразм."
+    },
+    "q": {
+      "name": "q",
+      "unit": "безразм."
+    }
+  },
+  "parameters": []
 }

@@ -1,0 +1,21 @@
+{
+  "Id": "02a5e76e-e347-4f65-b537-91ad8b2fab7c",
+  "name": "Пример с неотрицательностью",
+  "eqs": [],
+  "neqs": [],
+  "endogenous": {
+    "x": {
+      "name": "x",
+	  "nonneg": true,
+	  "initialiser": true,
+      "unit": "безразм."
+    }
+  },
+  "exogenous": {
+    "q": {
+      "name": "q",
+      "unit": "безразм."
+    }
+  },
+  "parameters": []
+}
