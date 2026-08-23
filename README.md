@@ -7,7 +7,7 @@ The tool requires two input files stored in the `data` folder: `metadata.json` a
 * `data.csv` contains data for initialising endogenous variables, exogenous variables and parameters;
 
 ## Semantic units and supported syntax
-1. Equations (eqs) - each is determined by the formula field (eq1$formula).  Supported functions and operators (to be expanded):
+1. Equations (eqs) store expressions set equal to zero; each is kept in the formula field: `formula = f(x)` is equivalent to stating `f(x) = 0`.  Supported functions and operators (to be expanded):
    * Elementary algebraic operators: `+`, `-`, `*`, `/`, power operator `^` (`x^a`) + `sqrt(x) ≡ x^0.5`;
    * Logarithmic functions: general logarithm `log(x, a)`, natural logarithm `ln(x) ≡ log(x, exp(1))`, decenary logarithm `lg(x) ≡ log(x, 10)`;
    * Trigonometric functions: sine `sin(x)`, cosine `cos(x)`, tangent `tg(x)`, cotangent `ctg(x)`;
