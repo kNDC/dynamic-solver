@@ -2,9 +2,9 @@
 An R Shiny tool for solving systems of equations and inequalities, for use in macroeconomic planning.
 
 ## Workflow
-The tool requires two input files stored in the `data` folder: `metadata.json` and `data.csv`
-   * `metadata.json` lays out variables and equations (general inequality constraints are WIP) (see the next section for the syntax);
-   * `data.csv` contains data for initialising endogenous variables, exogenous variables and parameters;
+The tool requires two input files stored in the `data` folder: `metadata.json` and `data.csv
+* `metadata.json` lays out variables and equations (general inequality constraints are WIP) (see the next section for the syntax);
+* `data.csv` contains data for initialising endogenous variables, exogenous variables and parameters;
 
 ## Semantic units and supported syntax
 1. Equations (eqs) - each is determined by the formula field (eq1$formula).  Supported functions and operators (to be expanded):
