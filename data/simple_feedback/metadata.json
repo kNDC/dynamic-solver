@@ -1,0 +1,44 @@
+{
+  "Id": "9b2080cd-2408-49a6-ac89-f4e63a6a836e",
+  "name": "Простая задача с обратной связью",
+  "eqs": {
+    "x_def": {
+      "formula": "x - sin(qx * t) - 5"
+    },
+    "y_def": {
+      "formula": "y - qy * h"
+    },
+    "h_init": {
+      "formula": "h[1] - h0[1]"
+    },
+    "h_def": {
+      "formula": "dd(h) - x[-T] + y[-T]"
+    }
+  },
+  "neqs": [],
+  "endogenous": {
+    "x": {
+      "name": "x0",
+      "unit": "безразм."
+    },
+    "y": {
+      "name": "xp0",
+      "unit": "безразм."
+    }
+  },
+  "exogenous": {
+    "qx": {
+      "name": "qx",
+      "unit": "безразм."
+    },
+    "qy": {
+      "name": "qy",
+      "unit": "безразм."
+    },
+    "h0": {
+      "name": "h0",
+      "unit": "безразм."
+    }
+  },
+  "parameters": []
+}

@@ -1,0 +1,21 @@
+{
+  "Id": "af33e946-fcce-4641-867b-f92067d46835",
+  "name": "Пример нестрогого условия дополняющей нежёсткости",
+  "eqs": [],
+  "neqs": [],
+  "endogenous": {
+    "x": {
+      "name": "x",
+      "nonneg": true,
+      "initialiser": true,
+      "unit": "безразм."
+    }
+  },
+  "exogenous": {
+    "q": {
+      "name": "q",
+      "unit": "безразм."
+    }
+  },
+  "parameters": []
+}
