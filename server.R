@@ -574,17 +574,6 @@ function(input, output, session) {
           x.prev <- x();
           
           # Пересчёт решения
-          # x.step <- NULL; lambda.adj <- lambda;
-          # while (is.null(x.step)) {
-          #   x.step <- tryCatch(
-          #     solve(JJ + lambda.adj * .sparseDiagonal(ncol(JJ)), rhs), 
-          #     error = function(e) NULL
-          #   );
-          #   
-          #   lambda.adj <- 1.5 * lambda.adj;
-          # }
-          
-          # x(x() - x.step);
           x(x() - solve(JJ, rhs));
           
           # Условие останова: решение перестало меняться
@@ -602,15 +591,6 @@ function(input, output, session) {
               n.steps >= max.steps) break;
         }
     });
-    
-    # from <- 1 + n.pers() * n.exprs$dials;
-    # to <- length(x());
-    # 
-    # if (from <= to) {
-    #   x.adj <- x();
-    #   x.adj[from:to] <- pmin(x.adj[from:to], 1e-1);
-    #   x(x.adj);
-    # }
     
     if (!is.finite(metric) || metric > eps) {
       showNotification(

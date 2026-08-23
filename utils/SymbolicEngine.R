@@ -43,12 +43,33 @@ SymbolicEngine <- R6Class(
         # Добавленные операторы
         if (expr[[1]] == quote(dd)) {
           return(call("%*%", self$ddMx, arg));
-        } else if (expr[[1]] == quote(adj0)) {
+        } else if (expr[[1]] == quote(adj0) || 
+                   expr[[1]] == quote(ip)) {
           return(call("%*%", private$adjMx0, arg));
-        } else if (expr[[1]] == quote(adj1)) {
+        } else if (expr[[1]] == quote(adj1) || 
+                   expr[[1]] == quote(fp)) {
           return(call("%*%", private$adjMx1, arg));
-        } else if (expr[[1]] == quote(adj)) {
+        } else if (expr[[1]] == quote(adj) || 
+                   expr[[1]] == quote(mp)) {
           return(call("%*%", self$adjMx, arg));
+        }
+        
+        if (expr[[1]] == quote(ln)) {
+          return(call("log", arg))
+        } else if (expr[[1]] == quote(lg)) {
+          return(call("log", arg, 10))
+        }
+        
+        if (expr[[1]] == quote(tg)) {
+          return(call("tan", arg))
+        } else if (expr[[1]] == quote(ctg)) {
+          return(call("/", 1, call("tan", arg))
+        }
+        
+        if (expr[[1]] == quote(arctg)) {
+          return(call("atan", arg))
+        } else if (expr[[1]] == quote(arcctg)) {
+          return(call("atan", call("/", 1, arg))
         }
         
         # Нормализация индексов
@@ -180,13 +201,13 @@ SymbolicEngine <- R6Class(
         if (op.name == "dd") {
           return(call("%*%", self$ddMx, 
                       .D(expr[[2]], var, flat_matching)));
-        } else if (op.name == "adj") {
+        } else if (op.name == "adj" || op.name == "mp") {
           return(call("%*%", self$adjMx, 
                       .D(expr[[2]], var, flat_matching)));
-        } else if (op.name == "adj0") {
+        } else if (op.name == "adj0" || op.name == "ip") {
           return(call("%*%", private$adjMx0, 
                       .D(expr[[2]], var, flat_matching)));
-        } else if (op.name == "adj1") {
+        } else if (op.name == "adj1" || op.name == "fp") {
           return(call("%*%", private$adjMx1, 
                       .D(expr[[2]], var, flat_matching)));
         }
@@ -239,6 +260,12 @@ SymbolicEngine <- R6Class(
           if (op.name == "arctg" || op.name == "atan") {
             x <- expr[[2]];
             return(private$diag(call("/", 1, call("+", 1, call("^", x, 2)))));
+          }
+          
+          if (op.name == "arcctg") {
+            x <- expr[[2]];
+            return(private$diag(call("/", call("-", 1), 
+                                     call("+", 1, call("^", x, 2)))));
           }
         }
         
@@ -306,19 +333,22 @@ SymbolicEngine <- R6Class(
           return(.dimension_op(node[[2]], 
             call("%*%", chain, self$ddMx)
           ));
-        } else if (node[[1]] == quote(adj)) {
+        } else if (node[[1]] == quote(adj) || 
+                   node[[1]] == quote(mp)) {
           return(.dimension_op(node[[2]], 
             call("%*%", chain, self$adjMx)
           ));
-        } else if (node[[1]] == quote(adj0)) {
+        } else if (node[[1]] == quote(adj0) || 
+                   node[[1]] == quote(ip)) {
           index.op <- call("[", self$uMx, 
                            call("-", quote(`T`)), quote(expr = ));
           return(.dimension_op(node[[2]], 
             call("%*%", chain, index)
           ));
-        } else if (node[[1]] == quote(adj1)) {
+        } else if (node[[1]] == quote(adj1) || 
+                   node[[1]] == quote(fp)) {
           return(.dimension_op(node[[2]], 
-                                    call("%*%", chain, self$adjMx)
+                               call("%*%", chain, self$adjMx)
           ));
         }
         
