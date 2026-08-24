@@ -63,13 +63,13 @@ SymbolicEngine <- R6Class(
         if (expr[[1]] == quote(tg)) {
           return(call("tan", arg))
         } else if (expr[[1]] == quote(ctg)) {
-          return(call("/", 1, call("tan", arg))
+          return(call("/", 1, call("tan", arg)))
         }
         
         if (expr[[1]] == quote(arctg)) {
           return(call("atan", arg))
         } else if (expr[[1]] == quote(arcctg)) {
-          return(call("atan", call("/", 1, arg))
+          return(call("atan", call("/", 1, arg)))
         }
         
         # Нормализация индексов
