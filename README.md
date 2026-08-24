@@ -1,5 +1,5 @@
 # Dynamic Solver
-An R Shiny tool for solving systems of equations and inequalities, for use in macroeconomic planning.
+An R Shiny tool for solving systems of dynamic and static equations and inequality constraints, for use in macroeconomic planning.
 
 ## Workflow
 The tool requires two input files stored in the `data` folder: `metadata.json` and `data.csv
