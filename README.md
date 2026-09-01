@@ -29,5 +29,5 @@ The tool requires two input files stored in the `data` folder: `metadata.json` a
 
 5. Parameters ((typically) uni-dimensional exogenous variables not set in the data file) (WIP):
    * Name: same as for endogenous;
-   * Value: an integer/double `par1 = 10` or a vector `par1 = [1, 2, 3]`;
+   * Value: an integer/double (e.g., `par1 = 10`) or a vector (e.g., `par1 = [1, 2, 3]`);
    * Unit: same as for endogenous;

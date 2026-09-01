@@ -13,7 +13,7 @@ function(input, output, session) {
   # Предзаготовка решения системы
   # x_0 определяется на основе размерности данных
   # x_k пересчитывается итеративно Гауссом-Ньютоном
-  x <- reactiveVal(numeric());
+  x <- reactiveVal(Matrix());
   x.df <- reactive({
     out <- list();
     
@@ -67,6 +67,8 @@ function(input, output, session) {
     
     out$ddMx <- out$uMx[-1,] - out$uMx[-n.pers(),];
     out$adjMx <- (out$uMx[-1,] + out$uMx[-n.pers(),])/2;
+    
+    # out$adjMxT <- 
     
     return(out);
   });
@@ -174,6 +176,7 @@ function(input, output, session) {
         vars.dict[[name]] <- core()$data[[name]];
       }
       
+      # В перечень внешних/экзогенных переменных включается время
       vars.dict$t <- seq_len(n.pers()) - 1;
       vars.names$exogenous <- c(vars.names$exogenous, "t");
       
@@ -224,10 +227,10 @@ function(input, output, session) {
       vars.names$endogenous <- c(vars.names$primals, duals.names);
       
       # Определение начального вектора решений с учётом размерности
-      x(do.call(
+      x(Matrix(do.call(
         c, lapply(vars.names$endogenous, 
                   function(name) return(vars.dict[[name]]))
-        ));
+        )));
       
       # Id динамических элементов страницы
       ids.indices <- unlist(lapply(
@@ -269,7 +272,7 @@ function(input, output, session) {
       from <- from + n.pers(); to <- to + n.pers();
     }
     
-    w <<- c(w, 1e1^rep(1e1, n.rows.err() - n.pers() * n.exprs$dials));
+    w <<- c(w, rep(1e6, n.rows.err() - n.pers() * n.exprs$dials));
   };
   
   # Сведение вектора весов
